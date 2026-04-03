@@ -1,0 +1,246 @@
+STEP 1: Create the GitHub Repository
+─────────────────────────────────────────────────────────
+Action: Go to github.com → New Repository
+  Name: etl-metadata-config (or your org's preferred name)
+  Visibility: Private
+  Initialize with: README.md + .gitignore (Python)
+
+Clone locally:
+  git clone https://github.com/{org}/etl-metadata-config.git
+  cd etl-metadata-config
+
+
+STEP 2: Create the Folder Structure
+─────────────────────────────────────────────────────────
+Action: Run these commands in terminal:
+
+  mkdir -p .github/workflows
+  mkdir -p docs
+  mkdir -p procedure
+  mkdir -p prompts
+  mkdir -p shared
+  mkdir -p products
+  mkdir -p releases
+  mkdir -p scripts
+
+Result: Empty skeleton ready to fill.
+
+
+STEP 3: Copy Your Existing System Files
+─────────────────────────────────────────────────────────
+Action: Move files you already have into the repo:
+
+  procedure/
+    ds_cil_bq_code_base.SP_DYNAMIC_ROUTINE_GENERATOR.sql  ← your v6.3
+    sp_log_execution_start.sql
+    sp_log_execution_success.sql
+    sp_log_execution_failure.sql
+    Data_Model.sql
+
+  docs/
+    DESIGN_DOCUMENT_v6.md          ← from our earlier work
+    FLOWCHART_v6.txt               ← from our earlier work
+    CONFIG_FILLING_GUIDE.md        ← from our earlier work
+    Config_Examples.sql            ← the 11-example file
+    PROMPT_FOR_NEW_CHAT.md         ← from our earlier work
+    PRODUCT_REGISTRY.md            ← create new (see below)
+
+Copilot Task: None needed. This is manual file copying.
+
+
+STEP 4: Create PRODUCT_REGISTRY.md
+─────────────────────────────────────────────────────────
+Action: Create docs/PRODUCT_REGISTRY.md
+
+Ask Copilot:
+  "Create a PRODUCT_REGISTRY.md with a table listing our
+   current products. The products we have are:
+   - KK (Kontokorrent) — owned by MIS Team
+   - SP (Sparprodukte) — owned by MIS Team
+   - NPK (Non-Performing Kredit) — owned by Risk Team
+   [add your actual products]"
+
+Save Copilot's output to docs/PRODUCT_REGISTRY.md
+
+
+STEP 5: Create .github/copilot-instructions.md
+─────────────────────────────────────────────────────────
+Action: Copy the content from Section 12 of your updated
+REPOSITORY_GUIDE.md directly into .github/copilot-instructions.md
+
+This is already written. Just copy it verbatim.
+
+Verify: Open a new Copilot Chat session in VS Code while
+in this repo. Ask: "What repository is this?"
+Copilot should respond based on the instructions file.
+
+
+STEP 6: Create the Shared Expressions File
+─────────────────────────────────────────────────────────
+Action: Create shared/expressions.sql with your existing
+expressions (EXP_REF_DATE, EXP_LOAD_USER, EXP_COMPLEX_CALC
+from Section 10 of your guide).
+
+Also create shared/expressions.rollback.sql with the
+conditional DELETEs.
+
+Both files are already written in your guide. Copy them.
+
+
+STEP 7: Create the Prompt Templates (KEY STEP)
+─────────────────────────────────────────────────────────
+This is where AI helps you build the AI instructions.
+
+Ask Copilot:
+  "@workspace I need to create two prompt templates for this
+   repository. Read #file:.github/copilot-instructions.md
+   for context about what this repo does.
+
+   PROMPT 1 (prompts/us-to-lld.md):
+   Write a prompt template that instructs an AI to read a
+   user story file and produce a Low-Level Design document.
+   The LLD must include:
+   - Source-to-target column mapping
+   - Join specifications (type, condition, column selection)
+   - Transform specifications (pass-through mode, computed cols)
+   - Output mapping (final column list with aliases)
+   - Merge key identification
+   The AI should reference #file:docs/CONFIG_FILLING_GUIDE.md
+   for table schemas and #file:docs/Config_Examples.sql for
+   correct patterns.
+
+   PROMPT 2 (prompts/lld-to-config.md):
+   Write a prompt template that instructs an AI to read an
+   LLD document and produce:
+   - A CONFIG SQL file (INSERT statements in dependency order)
+   - A ROLLBACK SQL file (DELETE statements in reverse order)
+   The AI should follow the 9-step Config Filling Order.
+   If new expressions are needed, generate them separately
+   for shared/expressions.sql.
+   Reference #file:docs/Config_Examples.sql for exact syntax."
+
+Review Copilot's output carefully. Iterate until both
+prompts produce good results when tested (Step 9).
+
+Save to: prompts/us-to-lld.md and prompts/lld-to-config.md
+
+
+STEP 8: Create Your First Product Folder
+─────────────────────────────────────────────────────────
+Pick ONE existing product that you already have working
+in BigQuery (e.g., KK base load). We'll reverse-engineer
+it into the repo format.
+
+  mkdir products/kk
+
+Action: Write the user story for this existing rule.
+
+Ask Copilot:
+  "@workspace I need to create a user story for an existing
+   ETL rule. Here are the details:
+   - Rule ID: KK_BASE_LOAD
+   - Source ID: MIS_KK
+   - Target: ds_stg.base_temp
+   - Merge Type: OVERWRITE
+   - [describe the business logic]
+   
+   Write a user story following the format described in
+   this repo's guide. The story should embed the rule_id,
+   source_id, target, and merge type naturally in the text."
+
+Save to: products/kk/US-kk-base-load.md
+
+
+STEP 9: Generate LLD + CONFIG + ROLLBACK (First Real Test)
+─────────────────────────────────────────────────────────
+This is where you test the entire Copilot workflow.
+
+Ask Copilot:
+  "@workspace Using #file:prompts/us-to-lld.md, generate
+   an LLD for #file:products/kk/US-kk-base-load.md.
+   Reference #file:docs/CONFIG_FILLING_GUIDE.md for schemas
+   and #file:docs/Config_Examples.sql for patterns."
+
+Review the LLD. Does it correctly identify:
+  - All source tables?
+  - Join types and conditions?
+  - Transform logic?
+  - Output column mapping?
+  - Merge keys?
+
+If not, refine and ask Copilot to fix specific parts.
+Save to: products/kk/LLD-kk-base-load.md
+
+Then continue:
+  "@workspace Using #file:prompts/lld-to-config.md, generate
+   CONFIG and ROLLBACK SQL for the LLD you just created.
+   Reference #file:docs/Config_Examples.sql for exact syntax."
+
+Review the CONFIG. Compare it against the SQL that's
+ALREADY working in BigQuery for this rule. They should
+produce equivalent configs.
+
+Save to: products/kk/CONFIG-kk-base-load.sql
+         products/kk/ROLLBACK-kk-base-load.sql
+
+
+STEP 10: Validate Your Reference Example
+─────────────────────────────────────────────────────────
+Compare the generated CONFIG against what already exists
+in BigQuery. Run in BQ console:
+
+  SELECT * FROM ds_metadata_config.t_pbmis_rule_config
+  WHERE rule_id = 'KK_BASE_LOAD';
+
+Does the generated INSERT match the existing row?
+Repeat for all config tables.
+
+If there are differences, refine your prompts (Step 7)
+and regenerate (Step 9). Iterate until the Copilot output
+matches your existing production config.
+
+This iteration is the most important part of Phase 1.
+The prompts are your "compiler" — get them right and
+every future rule generation will be consistent.
+
+
+STEP 11: Create README.md
+─────────────────────────────────────────────────────────
+Ask Copilot:
+  "@workspace Create a README.md for this repository.
+   Reference #file:.github/copilot-instructions.md for
+   what this repo does. Include:
+   - Purpose (1 paragraph)
+   - Quick start (how to add a new rule — 7 steps)
+   - Folder structure overview
+   - Links to docs/ files
+   - Link to the REPOSITORY_GUIDE.md for full details"
+
+Save to: README.md
+
+
+STEP 12: Commit and Push Everything
+─────────────────────────────────────────────────────────
+  git add .
+  git commit -m "chore: initial repository setup with
+    system docs, procedure, prompts, and KK reference example"
+  git push origin main
+
+Create environment branches:
+  git checkout -b Develop && git push origin Develop
+  git checkout -b sit && git push origin sit
+  git checkout -b uat && git push origin uat
+  git checkout -b preprod && git push origin preprod
+  git checkout main
+
+
+STEP 13: Set Up Branch Protection Rules
+─────────────────────────────────────────────────────────
+On github.com → Settings → Branches → Add rule:
+
+For each branch (Develop, sit, uat, preprod, main):
+  ✅ Require pull request before merging
+  ✅ Required approvals: 2
+  ✅ Require status checks to pass (add later in Phase 2)
+  ❌ Allow force pushes: OFF
+  ❌ Allow deletions: OFF
