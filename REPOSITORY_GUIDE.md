@@ -1309,39 +1309,39 @@ Either way, the fix is tracked in Git with full audit trail.
 │ QUICK REFERENCE: How to Add a New ETL Rule                      │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│ 1. git checkout -b feature/{product}-{process}                 │
+│ 1. git checkout -b feature/{product}-{process}                  │
 │                                                                 │
-│ 2. Create products/{product}/ folder (if new product)          │
-│    Update docs/PRODUCT_REGISTRY.md                             │
+│ 2. Create products/{product}/ folder (if new product)           │
+│    Update docs/PRODUCT_REGISTRY.md                              │
 │                                                                 │
-│ 3. Write: products/{product}/US-{product}-{process}.md         │
-│    (include metadata header with rule_id)                      │
+│ 3. Write: products/{product}/US-{product}-{process}.md          │
+│    (include metadata header with rule_id)                       │
 │                                                                 │
-│ 4. Generate via Copilot Chat:                                  │
-│    LLD-{product}-{process}.md                                  │
-│    CONFIG-{product}-{process}.sql                              │
-│    ROLLBACK-{product}-{process}.sql                            │
+│ 4. Generate via Copilot Chat:                                   │
+│    LLD-{product}-{process}.md                                   │
+│    CONFIG-{product}-{process}.sql                               │
+│    ROLLBACK-{product}-{process}.sql                             │
 │                                                                 │
-│ 5. git add → git commit → git push                             │
-│    Open Pull Request targeting the `dev` branch                │
+│ 5. git add → git commit → git push                              │
+│    Open Pull Request targeting the `dev` branch                 │
 │                                                                 │
 │ 6. Wait for validation ✅                                       │
-│    Get PR approved                                             │
-│    Merge into `dev` (auto-deploys to DEV environment)          │
+│    Get PR approved                                              │
+│    Merge into `dev` (auto-deploys to DEV environment)           │     
 │                                                                 │
-│ 7. Promote through environments by opening PRs                 │
-│    (`dev` → `sit` → `uat` → `preprod` → `main`)                │
+│ 7. Promote through environments by opening PRs                  │
+│    (`dev` → `sit` → `uat` → `preprod` → `main`)                 │
 │                                                                 │
-│ DONE. Your rule is live.                                       │
+│ DONE. Your rule is live.                                        │
 │                                                                 │
 ├─────────────────────────────────────────────────────────────────┤
-│ ROLLBACK: Execute the ROLLBACK file against BigQuery           │
-│ RELEASE ROLLBACK: Execute releases/RELEASE-*.rollback.sql     │
+│ ROLLBACK: Execute the ROLLBACK file against BigQuery            │
+│ RELEASE ROLLBACK: Execute releases/RELEASE-*.rollback.sql       │
 ├─────────────────────────────────────────────────────────────────┤
-│ NAMING: {TYPE}-{product}-{process}.{ext}                       │
-│ TYPES: US (.md) | LLD (.md) | CONFIG (.sql) | ROLLBACK (.sql) │
-│ FOLDERS: lowercase-with-hyphens (e.g., kk, npk, cust-360)    │
-│ RULE IDs: UPPER_SNAKE_CASE from US metadata header            │
+│ NAMING: {TYPE}-{product}-{process}.{ext}                        │
+│ TYPES: US (.md) | LLD (.md) | CONFIG (.sql) | ROLLBACK (.sql)   │
+│ FOLDERS: lowercase-with-hyphens (e.g., kk, npk, cust-360)       │
+│ RULE IDs: UPPER_SNAKE_CASE from US metadata header              │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
